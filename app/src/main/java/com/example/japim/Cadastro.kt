@@ -3,32 +3,13 @@ package com.example.japim
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,12 +22,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.japim.ui.theme.MPlus2
+import com.example.japim.apolloClient.TokenManager
+
+import com.example.japim.ui.theme.*
+import com.example.japim.apolloClient.generateApolloClient
+import com.example.japim.graphql.CreateUserMutation
+import com.example.japim.graphql.type.UserInputCreate
+
+import kotlinx.coroutines.launch
 
 @Composable
-fun Cadastro(modifier: Modifier = Modifier) {
+fun Cadastro(
+    modifier: Modifier = Modifier,
+    onVoltarLogin: () -> Unit = {},
+    tokenProvider : TokenManager,
+) {
 
-    // Variáveis dos campos
     var nome by remember { mutableStateOf("") }
     var sobrenome by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
@@ -55,17 +46,21 @@ fun Cadastro(modifier: Modifier = Modifier) {
     var ra by remember { mutableStateOf("") }
     var alunoFucapi by remember { mutableStateOf(false) }
 
+    var carregando by remember { mutableStateOf(false) }
+    var mensagemErro by remember { mutableStateOf<String?>(null) }
+    var mensagemSucesso by remember { mutableStateOf<String?>(null) }
+
+    val coroutineScope = rememberCoroutineScope()
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(PRIMARY)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 40.dp),
-
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // Logo do Japim
         Image(
             painter = painterResource(
                 id = R.drawable.logo_japim_preto
@@ -76,10 +71,9 @@ fun Cadastro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Título
         Text(
             text = "Criação de Conta",
-            color = Color(0xFFFFD600),
+            color = SECONDARY,
             fontFamily = MPlus2,
             fontWeight = FontWeight.Bold,
             fontSize = 30.sp
@@ -87,7 +81,6 @@ fun Cadastro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Campo Nome
         CampoCadastro(
             valor = nome,
             aoAlterar = { nome = it },
@@ -96,7 +89,6 @@ fun Cadastro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Campo Sobrenome
         CampoCadastro(
             valor = sobrenome,
             aoAlterar = { sobrenome = it },
@@ -105,7 +97,6 @@ fun Cadastro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Campo CPF
         CampoCadastro(
             valor = cpf,
             aoAlterar = {
@@ -119,7 +110,6 @@ fun Cadastro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Campo E-mail
         CampoCadastro(
             valor = email,
             aoAlterar = { email = it },
@@ -129,7 +119,6 @@ fun Cadastro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Campo Senha
         CampoCadastro(
             valor = senha,
             aoAlterar = { senha = it },
@@ -138,72 +127,193 @@ fun Cadastro(modifier: Modifier = Modifier) {
             tipoTeclado = KeyboardType.Password
         )
 
-        // Checkbox aluno FUCAPI
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Checkbox(
                 checked = alunoFucapi,
                 onCheckedChange = {
                     alunoFucapi = it
-
                     if (!it) {
                         ra = ""
                     }
                 },
                 colors = CheckboxDefaults.colors(
-                    checkedColor = Color(0xFFFFD600),
-                    uncheckedColor = Color(0xFFFFD600),
-                    checkmarkColor = Color.Black
+                    checkedColor = SECONDARY,
+                    uncheckedColor = SECONDARY,
+                    checkmarkColor = PRIMARY
                 )
             )
 
             Text(
                 text = "Sou Aluno da FUCAPI",
-                color = Color(0xFFFFD600),
+                color = SECONDARY,
                 fontFamily = MPlus2,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp
             )
         }
 
-        // Campo RA
-        CampoCadastro(
-            valor = ra,
-            aoAlterar = { ra = it },
-            texto = "Insira seu RA",
-            habilitado = alunoFucapi,
-            tipoTeclado = KeyboardType.Number
-        )
+        if (alunoFucapi) {
+            CampoCadastro(
+                valor = ra,
+                aoAlterar = { ra = it },
+                texto = "Insira seu RA",
+                tipoTeclado = KeyboardType.Number
+            )
+        }
 
         Spacer(modifier = Modifier.height(25.dp))
 
-        // Botão Entrar
+        mensagemErro?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                fontFamily = MPlus2,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        mensagemSucesso?.let {
+            Text(
+                text = it,
+                color = SUCCESS,
+                fontFamily = MPlus2,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        // Criar conta usando a API GraphQL
         Button(
             onClick = {
-                // Futuramente: enviar cadastro para a API
+                when {
+                    nome.isBlank() ||
+                            sobrenome.isBlank() ||
+                            cpf.isBlank() ||
+                            email.isBlank() ||
+                            senha.isBlank() -> {
+                        mensagemErro =
+                            "Preencha todos os campos obrigatórios."
+                    }
+
+                    cpf.length != 11 -> {
+                        mensagemErro =
+                            "O CPF deve conter 11 dígitos."
+                    }
+
+                    !android.util.Patterns.EMAIL_ADDRESS
+                        .matcher(email.trim()).matches() -> {
+                        mensagemErro =
+                            "Informe um e-mail válido."
+                    }
+
+                    alunoFucapi && ra.isBlank() -> {
+                        mensagemErro =
+                            "Informe seu RA."
+                    }
+
+                    else -> {
+                        carregando = true
+                        mensagemErro = null
+                        mensagemSucesso = null
+
+                        coroutineScope.launch {
+                            try {
+                                val response = generateApolloClient(tokenProvider).mutation(
+                                    CreateUserMutation(
+                                        input = UserInputCreate(
+                                            name = "${nome.trim()} ${sobrenome.trim()}",
+                                            email = email.trim(),
+                                            password = senha,
+                                            cpf = cpf,
+                                            ra = if (alunoFucapi) {
+                                                ra.trim()
+                                            } else {
+                                                ""
+                                            }
+                                        )
+                                    )
+                                ).execute()
+
+                                val erroConexao = response.exception
+                                val errosGraphQL = response.errors
+                                val usuario = response.data?.createUser
+
+                                when {
+                                    erroConexao != null -> {
+                                        mensagemErro =
+                                            "Não foi possível conectar à API."
+                                    }
+
+                                    !errosGraphQL.isNullOrEmpty() -> {
+                                        mensagemErro =
+                                            errosGraphQL.first().message
+                                    }
+
+                                    usuario != null -> {
+                                        mensagemSucesso =
+                                            "Conta criada com sucesso!"
+
+                                        nome = ""
+                                        sobrenome = ""
+                                        cpf = ""
+                                        email = ""
+                                        senha = ""
+                                        ra = ""
+                                        alunoFucapi = false
+                                    }
+
+                                    else -> {
+                                        mensagemErro =
+                                            "Não foi possível concluir o cadastro."
+                                    }
+                                }
+
+                            } catch (e: Exception) {
+                                mensagemErro =
+                                    "Falha de conexão com a API: ${e.message}"
+                            } finally {
+                                carregando = false
+                            }
+                        }
+                    }
+                }
             },
+            enabled = !carregando,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp),
             shape = RoundedCornerShape(5.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF35C900)
+                containerColor = SUCCESS
             )
         ) {
-            Text(
-                text = "Entrar",
-                color = Color.White,
-                fontFamily = MPlus2,
-                fontWeight = FontWeight.Bold
-            )
+            if (carregando) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = FOURTH
+                )
+            } else {
+                Text(
+                    text = "Criar Conta",
+                    color = FOURTH,
+                    fontFamily = MPlus2,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Botão Limpar
+        // Limpar formulário
         Button(
             onClick = {
                 nome = ""
@@ -213,18 +323,21 @@ fun Cadastro(modifier: Modifier = Modifier) {
                 senha = ""
                 ra = ""
                 alunoFucapi = false
+                mensagemErro = null
+                mensagemSucesso = null
             },
+            enabled = !carregando,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp),
             shape = RoundedCornerShape(5.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Yellow
+                containerColor = WARNING
             )
         ) {
             Text(
                 text = "Limpar",
-                color = Color.Black,
+                color = PRIMARY,
                 fontFamily = MPlus2,
                 fontWeight = FontWeight.Bold
             )
@@ -232,22 +345,20 @@ fun Cadastro(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(70.dp))
 
-        // Botão Voltar ao Login
+        // Voltar ao Login
         Button(
-            onClick = {
-                // Futuramente: navegar para o Login
-            },
+            onClick = onVoltarLogin,
             modifier = Modifier
                 .width(160.dp)
                 .height(40.dp),
             shape = RoundedCornerShape(5.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF60AFDA)
+                containerColor = THIRD
             )
         ) {
             Text(
                 text = "Voltar ao Login",
-                color = Color.White,
+                color = PRIMARY,
                 fontFamily = MPlus2,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
@@ -258,8 +369,6 @@ fun Cadastro(modifier: Modifier = Modifier) {
     }
 }
 
-
-// Componente reutilizável para os campos
 @Composable
 fun CampoCadastro(
     valor: String,
@@ -269,17 +378,12 @@ fun CampoCadastro(
     habilitado: Boolean = true,
     tipoTeclado: KeyboardType = KeyboardType.Text
 ) {
-
     TextField(
         value = valor,
         onValueChange = aoAlterar,
-
         modifier = Modifier.fillMaxWidth(),
-
         enabled = habilitado,
-
         singleLine = true,
-
         placeholder = {
             Text(
                 text = texto,
@@ -288,54 +392,43 @@ fun CampoCadastro(
                 fontFamily = MPlus2,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
-                color = Color.Black
+                color = FIFTH
             )
         },
-
         textStyle = LocalTextStyle.current.copy(
             textAlign = TextAlign.Center,
             fontFamily = MPlus2,
             fontSize = 14.sp
         ),
-
         shape = RoundedCornerShape(50.dp),
-
         keyboardOptions = KeyboardOptions(
             keyboardType = tipoTeclado
         ),
-
         visualTransformation = if (senha) {
             PasswordVisualTransformation()
         } else {
             VisualTransformation.None
         },
-
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFF1F3F4),
-            unfocusedContainerColor = Color(0xFFF1F3F4),
-            disabledContainerColor = Color(0xFFD0D0D0),
-
-            focusedTextColor = Color.Black,
-            unfocusedTextColor = Color.Black,
-
+            focusedContainerColor = FOURTH,
+            unfocusedContainerColor = FOURTH,
+            disabledContainerColor = FOURTH,
+            focusedTextColor = FIFTH,
+            unfocusedTextColor = FIFTH,
+            disabledTextColor = FIFTH,
+            focusedPlaceholderColor = FIFTH,
+            unfocusedPlaceholderColor = FIFTH,
+            disabledPlaceholderColor = FIFTH,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
-
-            cursorColor = Color.Black
+            cursorColor = FIFTH
         )
     )
 }
 
-
-
-
-
-
-
-
 @Preview(showBackground = true)
 @Composable
-private fun CadastroPreview() {
-    Cadastro()
+private fun CadastroPreview(tokenProvider: TokenManager) {
+    Cadastro(tokenProvider=tokenProvider)
 }

@@ -1,0 +1,7 @@
+mutation SubscribeParticipant($event_id: ID!) {
+    subscribeParticipant(event_id: $event_id) {
+        id
+        name
+        short_description
+    }
+}

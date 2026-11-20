@@ -1,13 +1,26 @@
+
 package com.example.japim.apolloClient
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import com.apollographql.apollo.ApolloClient
+import com.example.japim.BuildConfig
 import com.example.japim.interceptor.AuthorizationInterceptor
 
-val apolloClient = ApolloClient.Builder()
-    .serverUrl("http://192.168.1.8:8080/graphql")
-    .addInterceptor(AuthorizationInterceptor(
-        tokenProvider = {
-            "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBqYXBpbS5jb20iLCJyb2xlcyI6ImV2ZW50cy1zdWJzY3JpYmUtdm9sdW50ZWVyLHVzZXJzLWRlbGV0ZSxyb2xlcy11cGRhdGUsZXZlbnRzLXN1YnNjcmliZS1wYXJ0aWNpcGFudCxldmVudHMtY29uZmlybS1wcmVzZW5jZSxldmVudHMtdW5zdWJzY3JpYmUtdm9sdW50ZWVyLGV2ZW50cy1kZWxldGUscm9sZXMtdmlldyx1c2Vycy1yZWFkLHBlcm1pc3Npb25zLXVwZGF0ZSx1c2Vycy12aWV3LHJvbGVzLXJlYWQsZXZlbnRzLWNyZWF0ZSxyb2xlcy1kZWxldGUscm9sZXMtY3JlYXRlLGV2ZW50cy12aWV3LHBlcm1pc3Npb25zLXJlYWQsZXZlbnRzLXJlYWQscGVybWlzc2lvbnMtdmlldyxldmVudHMtY29uZmlybSxwZXJtaXNzaW9ucy1kZWxldGUsdXNlcnMtdXBkYXRlLGV2ZW50cy11bnN1YnNjcmliZS1wYXJ0aWNpcGFudCxldmVudHMtdXBkYXRlLHVzZXJzLWNyZWF0ZSxwZXJtaXNzaW9ucy1jcmVhdGUsZXZlbnRzLWNvbmZpcm0tcHJlc2VuY2Utdm9sdW50ZWVycyIsImlhdCI6MTc5NDg2Mjc0OSwiZXhwIjoxNzk0OTQ5MTQ5fQ.i9tjSKf7b_-a-6f6GZ0SObFw86BYtXaRTZQHVcr0RfI"
-        }
-    ))
-    .build()
+
+
+
+
+fun generateApolloClient(tokenProvider : TokenManager): ApolloClient {
+    val apolloClient: ApolloClient by lazy {
+        ApolloClient.Builder()
+            .serverUrl(BuildConfig.GRAPHQL_SERVER_URL)
+            .addInterceptor(
+                AuthorizationInterceptor(
+                    tokenProvider
+                )
+            )
+            .build()
+    }
+    return apolloClient;
+}

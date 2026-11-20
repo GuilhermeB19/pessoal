@@ -1,0 +1,8 @@
+mutation SubscribeVolunteer($event_id : ID!){
+    subscribeVolunteer(event_id: $event_id){
+        id
+        date_end
+        date_start
+        description
+    }
+}

@@ -1,0 +1,18 @@
+query Auth{
+    me {
+        id
+        name
+        email
+        cpf
+        ra
+        role {
+            id
+            name
+            initialism
+            permissions {
+                id
+                name
+            }
+        }
+    }
+}

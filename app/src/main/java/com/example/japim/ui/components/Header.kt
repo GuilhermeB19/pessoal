@@ -44,10 +44,12 @@ import com.example.japim.ui.theme.SUCCESS
 import com.example.japim.ui.theme.THIRD
 
 @Composable
-fun GenerateHeader(contentPage : @Composable (PaddingValues)  -> Unit){
+fun GenerateHeader(
+    onNavigateToEvents : ()-> Unit,
+    contentPage : @Composable (PaddingValues)  -> Unit
+){
     Scaffold(
         topBar = {
-            // O TopAppBar funciona como a faixa superior fixa
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +98,9 @@ fun GenerateHeader(contentPage : @Composable (PaddingValues)  -> Unit){
                     }
 
                     GenerateMenu { closeMenu ->
-                        GenerateContentMenu(closeMenu);
+                        GenerateContentMenu(
+                            onNavigateToEvents
+                        );
                     }
                 }
             }

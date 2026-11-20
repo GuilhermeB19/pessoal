@@ -23,7 +23,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.apollographql.apollo.api.label
+import com.example.japim.navigation.Screen
 import com.example.japim.ui.theme.FIFTH
 import com.example.japim.ui.theme.FOURTH
 import com.example.japim.ui.theme.MPlus2
@@ -47,14 +50,29 @@ private fun generateButton (title : String, onClick : ()-> Unit) : Unit{
     }
 }
 @Composable
-fun GenerateContentMenu(contentClose : ()-> Unit){
+fun GenerateContentMenu(
+    onNavigateToEvents : ()-> Unit
+){
+
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        generateButton("Meus Certificados",contentClose);
-        generateButton("Eventos que Participo",contentClose);
-        generateButton("Eventos",contentClose);
-        generateButton("Validar Certificado",contentClose);
-        generateButton("Página Admin",contentClose);
-        generateButton("Sair da Conta",contentClose);
+        generateButton("Meus Certificados", {
+//            navController.navigate(Screen.)
+        });
+        generateButton("Eventos que Participo",{
+
+        });
+        generateButton("Eventos") {
+            onNavigateToEvents()
+        };
+        generateButton("Validar Certificado",{
+
+        });
+        generateButton("Página Admin",{
+
+        });
+        generateButton("Sair da Conta",{
+
+        });
 
     }
 }

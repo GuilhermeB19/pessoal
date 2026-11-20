@@ -1,0 +1,6 @@
+mutation FinishEvent($id: ID!){
+    finishEvent(id: $id){
+        id
+        name
+    }
+}

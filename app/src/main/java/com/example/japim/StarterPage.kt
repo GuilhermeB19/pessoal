@@ -22,6 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import com.example.japim.apolloClient.TokenManager
+import com.example.japim.apolloClient.generateApolloClient
 import com.example.japim.graphql.GetEventsQuery
 import com.example.japim.graphql.type.Event
 import com.example.japim.remoteDataSource.EventRemoteDataSource
@@ -30,9 +33,10 @@ import com.example.japim.ui.components.cards.GenerateCard
 import com.example.japim.ui.components.search.GenerateSearchBar
 
 @Composable
-private fun viewStarterPage(
+private fun ViewStarterPage(
     modifier: Modifier = Modifier,
-    eventRemote: EventRemoteDataSource? = null
+    eventRemote: EventRemoteDataSource? = null,
+    onNavigateToDetails: (String) -> Unit = {}
 ){
     Column(
         modifier = modifier
@@ -57,34 +61,46 @@ private fun viewStarterPage(
                     event.name,
                     event.short_description,
                     event.speakers.firstOrNull()?.name ?: "",
-                    10,
-                    10,
-                    event.is_payment,
-                    {
-                        println("fala")
-                    }
-                )
+                    event.total_participants,
+                    event.total_participants,
+                    event.is_payment
+                ) {
+                    onNavigateToDetails(event.id)
+                }
             }
         }
-
     }
 }
 
 
+@Composable
+fun StarterPage(
+    tokenProvider: TokenManager,
+    onNavigateToCadastro: () -> Unit = {},
+    onNavigateToDetails: (String) -> Unit = {},
+    onNavigateToEvents : () -> Unit = {}
+){
+    val eventRemoteDataSource = remember { EventRemoteDataSource(generateApolloClient(tokenProvider)) }
+
+    ViewStarterPage(
+        eventRemote = eventRemoteDataSource,
+        onNavigateToDetails = onNavigateToDetails
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
-fun starterPage(){
-    val eventRemoteDataSource = remember { EventRemoteDataSource(com.example.japim.apolloClient.apolloClient) }
+fun StarterPagePreview(
+    onNavigateToCadastro: () -> Unit = {},
+    onNavigateToDetails: (String) -> Unit = {},
+    onNavigateToEvents : () -> Unit = {}
+){
+    val context = LocalContext.current
+    val tokenProvider = remember { TokenManager(context) }
+    val eventRemoteDataSource = remember { EventRemoteDataSource(generateApolloClient(tokenProvider)) }
 
-    GenerateHeader(
-        contentPage = { paddingResponse ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingResponse) // O padding do header entra aqui
-            ) {
-                viewStarterPage(eventRemote =  eventRemoteDataSource)
-            }
-        }
-    );
+    ViewStarterPage(
+        eventRemote = eventRemoteDataSource,
+        onNavigateToDetails = onNavigateToDetails
+    )
 }

@@ -22,5 +22,8 @@ query GetEvents{
             id
             name
         }
+        total_participants
+        total_volunteers
+        in_event
     }
 }
